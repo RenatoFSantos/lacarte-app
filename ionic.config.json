@@ -1,0 +1,7 @@
+{
+  "name": "lacarte-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
