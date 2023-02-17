@@ -3,7 +3,10 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  // apiPath: 'http://172.20.20.178:3000' // Malibu
+  apiPath: 'http://192.168.100.11:3000'
+  // apiPath: 'http://localhost:3000'
 };
 
 /*
