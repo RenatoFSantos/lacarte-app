@@ -14,13 +14,12 @@ import { UserService } from 'src/services/user.service';
   styleUrls: ['./menu-category.component.scss'],
 })
 export class MenuCategoryComponent implements OnInit, OnDestroy {
-
   private unsubscribeUid = new Subject();
   private unsubscribeCategory = new Subject();
   listCategory: Array<CategoryModel> = new Array<CategoryModel>();
   listMenu: Array<MenuModel> = new Array<MenuModel>();
   itemDetail = false;
-  title='';
+  title = '';
   selCategory = '';
   isBackButton = false;
   checked: boolean = false;
@@ -29,45 +28,48 @@ export class MenuCategoryComponent implements OnInit, OnDestroy {
     private active: ActivatedRoute,
     private menuSrv: MenuService,
     private userSrv: UserService
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.loadingResources();
   }
 
   async loadingResources() {
+    console.log('Carregando categorias...');
     this.active.params
-    .pipe(takeUntil(this.unsubscribeUid))
-    .subscribe(async p => {
-      this.listMenu = await this.menuSrv.getMenuByCompany(p['id']);
-      if(this.listMenu.length>0) {
-        this.title = this.listMenu[0].company.compNmTrademark;
-      } else {
-        this.title = 'Cardápio';
-      }
-      this.itemDetail = false;
-      this.checked = this.userSrv.userIsLogged();
-      // this.isBackButton = false;
-      await this.groupCategory();
-    });
+      .pipe(takeUntil(this.unsubscribeUid))
+      .subscribe(async (p) => {
+        this.listMenu = await this.menuSrv.getMenuByCompany(p['id']);
+        if (this.listMenu.length > 0) {
+          this.title = this.listMenu[0].company.compNmTrademark;
+        } else {
+          this.title = 'Cardápio';
+        }
+        this.itemDetail = false;
+        this.checked = this.userSrv.userIsLogged();
+        await this.groupCategory();
+      });
   }
 
   async filterCategory(idCategory: string) {
-    this.listMenu = this.listMenu.filter(menu => menu.product.category.uid === idCategory);
-    this.itemDetail=true;
-    this.selCategory = this.listMenu[0].product.category.cateNmCategory.toUpperCase();
+    this.listMenu = this.listMenu.filter(
+      (menu) => menu.product.category.uid === idCategory
+    );
+    this.itemDetail = true;
+    this.selCategory =
+      this.listMenu[0].product.category.cateNmCategory.toUpperCase();
   }
 
   async groupCategory() {
     this.listCategory = new Array<CategoryModel>();
     from(this.listMenu)
-    .pipe(
-      takeUntil(this.unsubscribeCategory),
-      distinct(obj => obj.product.category.cateNmCategory)
-    )
-    .subscribe(resp => {
-      this.listCategory.push(resp.product.category);
-    });
+      .pipe(
+        takeUntil(this.unsubscribeCategory),
+        distinct((obj) => obj.product.category.cateNmCategory)
+      )
+      .subscribe((resp) => {
+        this.listCategory.push(resp.product.category);
+      });
   }
 
   loadingPhoto(imgPhoto: any): any {
@@ -81,7 +83,7 @@ export class MenuCategoryComponent implements OnInit, OnDestroy {
   }
 
   closeMenu() {
-    this.itemDetail=false;
+    this.itemDetail = false;
   }
 
   ngOnDestroy(): void {
@@ -90,5 +92,4 @@ export class MenuCategoryComponent implements OnInit, OnDestroy {
     this.unsubscribeCategory.next();
     this.unsubscribeCategory.complete();
   }
-
 }

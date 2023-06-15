@@ -17,7 +17,7 @@ import * as isLeapYear from 'dayjs/plugin/isLeapYear';
 import 'dayjs/locale/pt-BR';
 import { of, Subject } from 'rxjs';
 import { nextDay } from 'date-fns';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, take } from 'rxjs/operators';
 import { VoucherModel } from 'src/models/voucher.model';
 dayjs.extend(isLeapYear);
 dayjs.locale('pt-BR');
@@ -28,7 +28,6 @@ dayjs.locale('pt-BR');
   styleUrls: ['./cashback-list.component.scss'],
 })
 export class CashbackListComponent implements OnInit, OnDestroy {
-
   private unsubscribeCompany = new Subject();
   private unsubscribeUser = new Subject();
   company: CompanyModel = new CompanyModel();
@@ -63,82 +62,107 @@ export class CashbackListComponent implements OnInit, OnDestroy {
     private cashbackSrv: CashbackService,
     private alertSrv: AlertService,
     private route: Router
-  ) { }
+  ) {}
 
   ngOnInit() {
+    console.log('Entrei no Init do Cashback');
     this.loadingResource();
     this.setIntrvlProgress();
   }
 
   ionViewWillLeave() {
-    if(this.progressInterval) {
-      clearInterval(this.progressInterval);
+    if (this.progressInterval) {
+      console.log('Cancelando intervalo');
+      // Retirei para testar a geração constante e ver se teria problemas de memória.
+      // clearInterval(this.progressInterval);
     }
   }
 
   async loadingResource() {
     this.active.params
-    .pipe(takeUntil(this.unsubscribeCompany))
-    .subscribe(async p => {
-      if(p['id']!==undefined) {
-        this.title='Promoções';
-        this.isMyWallet = false;
-        this.setCompany(p['id']);
-      } else {
-        if(this.userSrv.userIsLogged()) {
-          this.title='Minha Carteira';
-          this.isMyWallet = true;
-          this.checked = true;
-          this.user = await this.getUser();
-          of(this.user.uid)
-          .pipe(takeUntil(this.unsubscribeUser))
-          .subscribe(async id => {
-            const result = await this.cashbackSrv.getFidelityByUser(id);
-            if(result.success) {
-              this.listFidelities = result.data as Array<FidelityModel>;
-              // ORDER BY COMPANY NAME
-              this.listFidelities.sort((a, b) => {
-                if(a.promotion.company.compNmTrademark > b.promotion.company.compNmTrademark) {
-                  return 1;
-                }
-                if(a.promotion.company.compNmTrademark < b.promotion.company.compNmTrademark) {
-                  return -1;
-                }
-                return 0;
-              });
-            } else {
-              this.alertSrv.alert('Promoções', 'Não existem promoções cadastradas para este usuário!');
-            }
-          });
+      .pipe(takeUntil(this.unsubscribeCompany))
+      .subscribe(async (p) => {
+        if (p['id'] !== undefined) {
+          this.title = 'Promoções';
+          this.isMyWallet = false;
+          this.setCompany(p['id']);
         } else {
-          this.alertSrv.alert('Cadastro', 'É necessário uma cadastro para acessar sua carteira de promoções! Cadastre-se agora!');
-          this.route.navigateByUrl('/tabs/profile');
+          if (this.userSrv.userIsLogged()) {
+            this.title = 'Minha Carteira';
+            this.isMyWallet = true;
+            this.checked = true;
+            this.user = await this.getUser();
+            console.log('Código do usuário=', this.user.uid);
+            of(this.user.uid)
+              .pipe(takeUntil(this.unsubscribeUser))
+              .subscribe(async (id) => {
+                console.log('valor do id antes do getFidelityByUser=', id);
+                const result = await this.cashbackSrv.getFidelityByUser(id);
+                if (result.success) {
+                  this.listFidelities = result.data as Array<FidelityModel>;
+                  // ORDER BY COMPANY NAME
+                  this.listFidelities.sort((a, b) => {
+                    if (
+                      a.promotion.company.compNmTrademark >
+                      b.promotion.company.compNmTrademark
+                    ) {
+                      return 1;
+                    }
+                    if (
+                      a.promotion.company.compNmTrademark <
+                      b.promotion.company.compNmTrademark
+                    ) {
+                      return -1;
+                    }
+                    return 0;
+                  });
+                } else {
+                  this.alertSrv.alert(
+                    'Promoções',
+                    'Não existem promoções cadastradas para este usuário!'
+                  );
+                }
+              });
+          } else {
+            this.alertSrv.alert(
+              'Cadastro',
+              'É necessário uma cadastro para acessar sua carteira de promoções! Cadastre-se agora!'
+            );
+            this.route.navigateByUrl('/tabs/profile');
+          }
         }
-      }
-    });
+      });
   }
 
   async setCompany(uid: string): Promise<void> {
     this.company = new CompanyModel();
     const result = await this.companySrv.getById(uid);
-    if(result.success) {
+    if (result.success) {
       this.company = result.data as CompanyModel;
       await this.loadingPromotions();
       this.checked = this.userSrv.userIsLogged();
     } else {
-      this.alertSrv.alert('Erro!!!', 'Não consigo encontrar empresa. Verifique!');
+      this.alertSrv.alert(
+        'Erro!!!',
+        'Não consigo encontrar empresa. Verifique!'
+      );
     }
   }
 
   async getUser(): Promise<UserModel> {
     this.user = new UserModel();
-    if(this.userSrv.userIsLogged()) {
-      const login = await JSON.parse(localStorage.getItem(CONSTANTS.keyStore.user));
+    if (this.userSrv.userIsLogged()) {
+      const login = await JSON.parse(
+        localStorage.getItem(CONSTANTS.keyStore.user)
+      );
       const result = await this.userSrv.getById(login.uid);
-      if(result.success) {
+      if (result.success) {
         this.user = result.data as UserModel;
       } else {
-        this.alertSrv.alert('Erro!', 'Não consigo localizar usuário. Verifique!');
+        this.alertSrv.alert(
+          'Erro!',
+          'Não consigo localizar usuário. Verifique!'
+        );
       }
     }
     return this.user;
@@ -146,9 +170,12 @@ export class CashbackListComponent implements OnInit, OnDestroy {
 
   async loadingPromotions() {
     this.listPromotions = new Array<PromotionModel>();
-    const result = await this.promotionSrv.getPromotionsByCompany(this.company.uid);
-    if(result.success) {
-      this.listPromotions = await result.data.resourceList as Array<PromotionModel>;
+    const result = await this.promotionSrv.getPromotionsByCompany(
+      this.company.uid
+    );
+    if (result.success) {
+      this.listPromotions = (await result.data
+        .resourceList) as Array<PromotionModel>;
     }
   }
 
@@ -169,31 +196,36 @@ export class CashbackListComponent implements OnInit, OnDestroy {
   }
 
   async detailPromotion(promotion: PromotionModel) {
-
-    if(this.validPromotion(promotion.promDtFinish)>0) {
+    if (this.validPromotion(promotion.promDtFinish) > 0) {
       this.isActivePromotion = true;
     } else {
       this.isActivePromotion = false;
     }
     this.cashback = new FidelityModel();
-    if(this.user.uid===undefined || this.user.uid===null) {
-      if(localStorage.getItem(CONSTANTS.keyStore.user) !== null) {
+    if (this.user.uid === undefined || this.user.uid === null) {
+      if (localStorage.getItem(CONSTANTS.keyStore.user) !== null) {
         this.user = await this.getUser();
       } else {
-        this.alertSrv.alert('Cashback', 'Para usar esta funcionalidade é necessário um cadastro. Faça seu cadastro no opção Perfil!');
+        this.alertSrv.alert(
+          'Cashback',
+          'Para usar esta funcionalidade é necessário um cadastro. Faça seu cadastro no opção Perfil!'
+        );
         this.route.navigateByUrl('/tabs/profile');
       }
     }
     await Object.assign(this.company, promotion.company);
 
-    if(this.company?.uid===undefined || this.company?.uid===null) {
+    if (this.company?.uid === undefined || this.company?.uid === null) {
       await this.setCompany(promotion.company.uid);
     }
     // GET FIDELITY BY USER AND PROMOTION
-    const result = await this.cashbackSrv.getFidelityByUserPromotion(this.user.uid, promotion.uid);
-    if(result.success) {
+    const result = await this.cashbackSrv.getFidelityByUserPromotion(
+      this.user.uid,
+      promotion.uid
+    );
+    if (result.success) {
       this.cashback = result.data as FidelityModel;
-      if(this.cashback && this.cashback.fideQnVoucher != null) {
+      if (this.cashback && this.cashback.fideQnVoucher != null) {
         this.count = this.cashback.fideQnVoucher;
       } else {
         // CREATE NEW CASHBACK
@@ -206,7 +238,7 @@ export class CashbackListComponent implements OnInit, OnDestroy {
     }
     this.isDetail = true;
     // VALIDATING USER BY COMPANY RESPONSIBLE
-    if(this.user.uid === this.company.user.uid) {
+    if (this.user.uid === this.company.user.uid) {
       this.isAdmin = true;
     } else {
       this.isAdmin = false;
@@ -219,39 +251,48 @@ export class CashbackListComponent implements OnInit, OnDestroy {
   }
 
   rescueConfirm(rescue: any) {
-    this.alertSrv.confirm('Promotion', 'Deseja resgatar esta promoção?', this.rescuePromotion).then(async resp => {
-      if(resp.role==='Ok') {
-        const confirm = await this.getVoucher(0);
-        if(confirm) {
-          this.cashback.fideQnVoucher = 0;
-          try {
-            const result = await this.cashbackSrv.save(this.cashback);
-            if(result.success) {
-              this.alertSrv.toast('Voucher resgatado!', 'top');
-              this.backList();
+    this.alertSrv
+      .confirm(
+        'Promotion',
+        'Deseja resgatar esta promoção?',
+        this.rescuePromotion
+      )
+      .then(async (resp) => {
+        if (resp.role === 'Ok') {
+          const confirm = await this.getVoucher(0);
+          if (confirm) {
+            this.cashback.fideQnVoucher = 0;
+            try {
+              const result = await this.cashbackSrv.save(this.cashback);
+              if (result.success) {
+                this.alertSrv.toast('Voucher resgatado!', 'top');
+                this.backList();
+              }
+            } catch (error) {
+              this.alertSrv.alert(
+                'Erro!',
+                'Não consigo gravar registro. Verifique!'
+              );
             }
-          } catch (error) {
-            this.alertSrv.alert('Erro!', 'Não consigo gravar registro. Verifique!');
           }
         }
-      }
-    });
+      });
   }
 
   async rescuePromotion(res: any) {
-    if(res) {
+    if (res) {
       console.log('Entrei no rescuePromotion');
     }
   }
 
   async getVoucher(ind: number): Promise<boolean> {
-    if(this.isActivePromotion) {
-      if(this.codeGenerated==='0') {
+    if (this.isActivePromotion) {
+      if (this.codeGenerated === '0') {
         await this.voucherGenerator();
       }
       this.codeVoucher = await this.voucherAuthorization();
-      if(this.codeGenerated.trim() === this.codeVoucher.trim()) {
-        if(ind>0) {
+      if (this.codeGenerated.trim() === this.codeVoucher.trim()) {
+        if (ind > 0) {
           this.count = this.count + 1;
           this.cashback.fideQnVoucher = this.count;
           this.saveVoucher(this.cashback);
@@ -270,7 +311,7 @@ export class CashbackListComponent implements OnInit, OnDestroy {
   async voucherAuthorization(): Promise<any> {
     let result = '0';
     await this.alertSrv.codeAuthorization().then((resp) => {
-      if(resp.role === 'Ok') {
+      if (resp.role === 'Ok') {
         result = resp.data.values[0];
       }
     });
@@ -281,11 +322,14 @@ export class CashbackListComponent implements OnInit, OnDestroy {
     this.codeGenerated = '';
     this.voucher = new VoucherModel();
     const result = await this.cashbackSrv.generateVoucher(this.voucher);
-    if(result.success) {
+    if (result.success) {
       this.voucher = result.data as VoucherModel;
       this.codeGenerated = this.voucher.voucCdCode;
     } else {
-      this.alertSrv.alert('Erro!', 'Não consigo gerar código do voucher. Verifique!');
+      this.alertSrv.alert(
+        'Erro!',
+        'Não consigo gerar código do voucher. Verifique!'
+      );
     }
   }
 
@@ -298,10 +342,12 @@ export class CashbackListComponent implements OnInit, OnDestroy {
   }
 
   setIntrvlProgress() {
+    console.log('Entrei no intervalo');
     this.progress = 1;
     this.progressInterval = setInterval(() => {
       this.progress += 0.01;
-      if(this.progress > 1) {
+      if (this.progress > 1) {
+        console.log('Setando intervalo');
         setTimeout(() => {
           this.progress = 0;
           this.voucherGenerator();
@@ -311,11 +357,11 @@ export class CashbackListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    console.log('Entrei no onDestroy');
     clearInterval(this.progressInterval);
     this.unsubscribeCompany.next();
     this.unsubscribeCompany.complete();
     this.unsubscribeUser.next();
     this.unsubscribeUser.complete();
   }
-
 }

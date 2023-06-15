@@ -7,20 +7,16 @@ import { SharedModule } from 'src/shared/shared.module';
 import { SimpleMaskModule } from 'ngx-ion-simple-mask';
 import { MenuCategoryComponent } from './menu-category/menu-category.component';
 import { StarRatingComponent } from 'src/shared/component/star-rating/star-rating.component';
-
-
+import { IonicModule } from '@ionic/angular';
 
 @NgModule({
-  declarations: [
-    MenuListComponent,
-    MenuCategoryComponent,
-    StarRatingComponent,
-  ],
+  declarations: [MenuListComponent, MenuCategoryComponent, StarRatingComponent],
   imports: [
+    IonicModule,
     CommonModule,
     MenuRoutingModule,
     SimpleMaskModule,
     SharedModule,
-  ]
+  ],
 })
-export class MenuModule { }
+export class MenuModule {}

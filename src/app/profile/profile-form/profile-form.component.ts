@@ -69,11 +69,13 @@ export class ProfileFormComponent implements OnInit, OnDestroy {
     this.inRegister = this.userSrv.userIsLogged();
     console.log(localStorage.getItem(CONSTANTS.keyStore.user));
     console.log('Entrei no ionViewDidEnter =>', this.inRegister);
+    this.loadingTypeForm();
   }
 
   async loadingTypeForm() {
     console.log('Carregando formulário');
     if (!this.isLogged()) {
+      this.checked = false;
       if (this.inRegister) {
         console.log('Não Registrado');
         await this.loadingFormRegister();
@@ -150,20 +152,24 @@ export class ProfileFormComponent implements OnInit, OnDestroy {
 
   async loadingUser(): Promise<void> {
     try {
-      const result = await this.userSrv.getById(this.loginResource.uid);
-      console.log('Carregando usuário', this.loginResource.uid);
-      if (result.success) {
-        this.userResource = result.data as UserModel;
-        this.inRegister = true;
-        await this.formResource.patchValue(this.userResource);
-        await this.loadingPhoto();
-        if (this.userResource.userDtBirthdate) {
-          this.birthDate = this.userResource.userDtBirthdate.toString();
-          this.birthDateTime = dayjs(
-            this.userResource.userDtBirthdate.toString()
-          ).format('DD/MM/YYYY');
-          this.formResource.get('userDtBirthdate').setValue(this.birthDate);
+      if (this.loginResource.uid) {
+        Object.assign(this.userResource, this.loginResource);
+      } else {
+        const result = await this.userSrv.getById(this.loginResource.uid);
+        console.log('Carregando usuário', this.loginResource.uid);
+        if (result.success) {
+          this.userResource = result.data as UserModel;
+          this.inRegister = true;
         }
+      }
+      await this.formResource.patchValue(this.userResource);
+      await this.loadingPhoto();
+      if (this.userResource.userDtBirthdate) {
+        this.birthDate = this.userResource.userDtBirthdate.toString();
+        this.birthDateTime = dayjs(
+          this.userResource.userDtBirthdate.toString()
+        ).format('DD/MM/YYYY');
+        this.formResource.get('userDtBirthdate').setValue(this.birthDate);
       }
     } catch (error) {
       this.alertSrv.toast(

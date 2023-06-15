@@ -11,16 +11,12 @@ import { from, Observable, of, scheduled, Subject } from 'rxjs';
 import { TokenService } from './token.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserService extends BaseService<UserModel> {
-
   private subUserData: Subject<UserModel> = new Subject<UserModel>();
 
-  constructor(
-    public http: HttpService,
-    public tokenService: TokenService
-  ) {
+  constructor(public http: HttpService, public tokenService: TokenService) {
     super('users', http);
   }
 
@@ -29,7 +25,7 @@ export class UserService extends BaseService<UserModel> {
     try {
       return await this.http.post(`${environment.apiPath}/users/auth`, user);
     } catch (error) {
-      return { success: false, data: undefined, error};
+      return { success: false, data: undefined, error };
     }
   }
 
@@ -37,7 +33,7 @@ export class UserService extends BaseService<UserModel> {
     try {
       return await this.http.post(`${environment.apiPath}/users`, user);
     } catch (error) {
-      return { success: false, data: undefined, error};
+      return { success: false, data: undefined, error };
     }
   }
 
@@ -45,25 +41,39 @@ export class UserService extends BaseService<UserModel> {
     try {
       return await this.http.get(`${environment.apiPath}/users/email/${email}`);
     } catch (error) {
-      return { success: false, data: undefined, error};
+      return { success: false, data: undefined, error };
     }
   }
 
   async sendEmail(user: UserModel): Promise<iResultHttp> {
     try {
-      return await this.http.post(`${environment.apiPath}/users/sendEmail`, user);
+      return await this.http.post(
+        `${environment.apiPath}/users/sendEmail`,
+        user
+      );
     } catch (error) {
-      return { success: false, data: undefined, error};
+      return { success: false, data: undefined, error };
     }
   }
 
   saveDataLoginInfo(data: iAuth) {
-    localStorage.setItem(CONSTANTS.keyStore.user, JSON.stringify(data.token.message.user));
+    localStorage.setItem(
+      CONSTANTS.keyStore.user,
+      JSON.stringify(data.token.message.user)
+    );
     localStorage.setItem(CONSTANTS.keyStore.token, data.token.message.token);
-    localStorage.setItem(CONSTANTS.keyStore.refreshtoken, data.refreshToken.uid);
-    localStorage.setItem(CONSTANTS.keyStore.profile,
-      data.token.message.user.userCdType === 'A' ? 'Administrador':
-      data.token.message.user.userCdType === 'M' ? 'Fornecedor' : 'Cliente');
+    localStorage.setItem(
+      CONSTANTS.keyStore.refreshtoken,
+      data.refreshToken.uid
+    );
+    localStorage.setItem(
+      CONSTANTS.keyStore.profile,
+      data.token.message.user.userCdType === 'A'
+        ? 'Administrador'
+        : data.token.message.user.userCdType === 'M'
+        ? 'Fornecedor'
+        : 'Cliente'
+    );
     this.subUserData.next(this.userData);
   }
 
@@ -99,5 +109,4 @@ export class UserService extends BaseService<UserModel> {
       return {} as UserModel;
     }
   }
-
 }

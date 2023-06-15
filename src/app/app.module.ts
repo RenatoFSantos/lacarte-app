@@ -10,7 +10,12 @@ import { SharedModule } from 'src/shared/shared.module';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 // --- CURRENCY FORMAT IMPORTS
-import { DEFAULT_CURRENCY_CODE, LOCALE_ID, NgModule } from '@angular/core';
+import {
+  CUSTOM_ELEMENTS_SCHEMA,
+  DEFAULT_CURRENCY_CODE,
+  LOCALE_ID,
+  NgModule,
+} from '@angular/core';
 import ptBr from '@angular/common/locales/pt';
 import { registerLocaleData } from '@angular/common';
 import { AuthInterceptor } from 'src/services/auth.interceptor';
@@ -18,9 +23,7 @@ import { AuthInterceptor } from 'src/services/auth.interceptor';
 registerLocaleData(ptBr);
 
 @NgModule({
-  declarations: [
-    AppComponent,
-  ],
+  declarations: [AppComponent],
   imports: [
     IonicModule,
     CommonModule,
@@ -32,24 +35,26 @@ registerLocaleData(ptBr);
     SharedModule,
     IonicModule.forRoot({
       backButtonText: 'Voltar',
-      mode: 'ios' // --- Mode default md or ios
+      mode: 'ios', // --- Mode default md or ios
     }),
   ],
   providers: [
-    { provide: LOCALE_ID, useValue: 'pt'},
+    { provide: LOCALE_ID, useValue: 'pt' },
     {
       provide: DEFAULT_CURRENCY_CODE,
       useValue: 'BRL',
     },
     {
-      provide: RouteReuseStrategy, useClass: IonicRouteStrategy
+      provide: RouteReuseStrategy,
+      useClass: IonicRouteStrategy,
     },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
-      multi: true
+      multi: true,
     },
   ],
   bootstrap: [AppComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AppModule {}

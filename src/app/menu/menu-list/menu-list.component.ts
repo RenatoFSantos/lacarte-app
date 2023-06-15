@@ -1,4 +1,10 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CompanyModel } from 'src/models/company.model';
 import { CompanyService } from 'src/services/company.service';
@@ -13,7 +19,6 @@ import { takeUntil } from 'rxjs/operators';
   styleUrls: ['./menu-list.component.scss'],
 })
 export class MenuListComponent implements OnInit, OnDestroy {
-
   private unsubscribe = new Subject();
   resourceList: Array<CompanyModel> = new Array<CompanyModel>();
   resourceListFilter: Array<CompanyModel> = new Array<CompanyModel>();
@@ -25,26 +30,44 @@ export class MenuListComponent implements OnInit, OnDestroy {
     private active: ActivatedRoute,
     private userSrv: UserService,
     private router: Router
-  ) {
-  }
+  ) {}
 
   ngOnInit() {
     this.loadingResourceList();
+    console.log('Entrei no init de cardápio!');
   }
 
   async loadingResourceList(): Promise<void> {
+    console.log('Carregando a lista de empresas');
+    // **************************************************************
+    // VERSÃO 2 - PROMISE
+    // **************************************************************
     this.active.params
-    .pipe(takeUntil(this.unsubscribe))
-    .subscribe(async (resolve) => {
+      .pipe(takeUntil(this.unsubscribe))
+      .subscribe(async (resolve) => {
         const result = await this.companySrv.getAll();
-        if(result.success) {
+        console.log('Dentro do subscribe das empresas');
+        if (result.success) {
           this.resourceList = result.data as Array<CompanyModel>;
           this.resourceListFilter = this.resourceList;
-          this.search.nativeElement.value = '';
+          // this.search.nativeElement.value = '';
+          this.search.nativeElement = '';
         }
         this.checked = this.checkLogin();
-      }
-    );
+      });
+
+    // **************************************************************
+    // VERSÃO 2 - PROMISE
+    // **************************************************************
+    // const result = await this.companySrv.getAll();
+    // if (result.success) {
+    //   this.resourceList = result.data as Array<CompanyModel>;
+    //   this.resourceListFilter = this.resourceList;
+    //   // this.search.nativeElement.value = '';
+    //   this.search.nativeElement = '';
+    // }
+    // this.checked = this.checkLogin();
+    // console.log('Valor do checked=', this.checked);
   }
 
   selectCompany(id: any) {
@@ -72,16 +95,18 @@ export class MenuListComponent implements OnInit, OnDestroy {
 
   handleChange(event) {
     const query = event.target.value.toLowerCase();
-    if(event.target.value) {
-      this.resourceListFilter = this.resourceList.filter(company => company.compNmTrademark.toLowerCase().indexOf(query) > -1);
+    if (event.target.value) {
+      this.resourceListFilter = this.resourceList.filter(
+        (company) => company.compNmTrademark.toLowerCase().indexOf(query) > -1
+      );
     } else {
       this.resourceListFilter = this.resourceList;
     }
   }
 
   ngOnDestroy(): void {
-      this.unsubscribe.next();
-      this.unsubscribe.complete();
+    console.log('Estou no ngOnDestroy');
+    this.unsubscribe.next();
+    this.unsubscribe.complete();
   }
-
 }

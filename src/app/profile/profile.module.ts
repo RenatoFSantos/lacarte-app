@@ -6,19 +6,18 @@ import { ProfileRoutingModule } from './profile-routing.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrMaskerModule } from 'br-mask';
 import { SharedModule } from 'src/shared/shared.module';
-
+import { IonicModule } from '@ionic/angular';
 
 @NgModule({
-  declarations: [
-    ProfileFormComponent,
-  ],
+  declarations: [ProfileFormComponent],
   imports: [
+    SharedModule,
     CommonModule,
     FormsModule,
+    IonicModule,
     ReactiveFormsModule,
     BrMaskerModule,
     ProfileRoutingModule,
-    SharedModule,
-  ]
+  ],
 })
-export class ProfileModule { }
+export class ProfileModule {}

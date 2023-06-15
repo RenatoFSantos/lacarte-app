@@ -1,4 +1,3 @@
-
 import { AlertService } from './alert.service';
 import { Injectable } from '@angular/core';
 import { iResultHttp } from 'src/interfaces/iResultHttp';
@@ -7,18 +6,15 @@ import { CONSTANTS } from 'src/shared/constants';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { IParam } from 'src/interfaces/iParam';
 
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class HttpService {
-
   constructor(
     private http: HttpClient,
     private alertSrv: AlertService,
-    private spinnerSrv: SpinnerService,
-  ) {
-  }
+    private spinnerSrv: SpinnerService
+  ) {}
 
   private createHeaders(params?: Array<IParam>): any {
     const token = localStorage.getItem(CONSTANTS.keyStore.token);
@@ -28,17 +24,23 @@ export class HttpService {
         headers: new HttpHeaders({
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          'x-token-access': token
+          'x-token-access': token,
+          // 'Access-Control-Allow-Origin': '*',
+          // 'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+          // 'Access-Control-Allow-Headers': 'Content-Type',
         }),
-        params: new HttpParams({})
+        params: new HttpParams({}),
       };
     } else {
       httpOptions = {
         headers: new HttpHeaders({
           'Content-Type': 'application/json',
-          Accept: 'application/json'
+          Accept: 'application/json',
+          // 'Access-Control-Allow-Origin': '*',
+          // 'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+          // 'Access-Control-Allow-Headers': 'Content-Type',
         }),
-        params: new HttpParams({})
+        params: new HttpParams({}),
       };
     }
 
@@ -82,8 +84,10 @@ export class HttpService {
       } catch (error) {
         let errorText = '<ul>';
         if (Array.isArray(error.error)) {
-          error.error.forEach(element => {
-            errorText += `<li style="text-align: left">${element.message || element}</li>`;
+          error.error.forEach((element) => {
+            errorText += `<li style="text-align: left">${
+              element.message || element
+            }</li>`;
           });
           errorText += '</ul>';
           await this.alertSrv.alert('Atenção', errorText);
@@ -111,6 +115,4 @@ export class HttpService {
       }
     });
   }
-
-
 }

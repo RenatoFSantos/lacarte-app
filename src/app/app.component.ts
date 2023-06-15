@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { StatusBar, Style} from '@capacitor/status-bar';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { Network } from '@capacitor/network';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { isPlatform, Platform } from '@ionic/angular';
@@ -14,13 +14,12 @@ import { CONSTANTS } from 'src/shared/constants';
   styleUrls: ['app.component.scss'],
 })
 export class AppComponent implements OnInit, OnDestroy {
-
   disconnectSubscription: Subscription = new Subscription();
 
   constructor(
     private platform: Platform,
     private router: Router,
-    private alertService: AlertService,
+    private alertService: AlertService
   ) {
     this.initializeApp();
   }
@@ -32,45 +31,50 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async initializeApp() {
     await this.platform.ready().then(() => {
-      StatusBar.setOverlaysWebView({overlay: false}).catch(() => {});
-      StatusBar.setStyle({style: Style.Default}).catch(() => {});
-      if(isPlatform('android')) {
-        StatusBar.setBackgroundColor({color: '#b71c1c'}).catch(() => {});
+      StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+      StatusBar.setStyle({ style: Style.Default }).catch(() => {});
+      if (isPlatform('android')) {
+        StatusBar.setBackgroundColor({ color: '#b71c1c' }).catch(() => {});
       }
       SplashScreen.hide();
       // Verificando conexão com a internet
-      Network.addListener('networkStatusChange', status => {
+      Network.addListener('networkStatusChange', (status) => {
         console.log('Valor do status da rede = ', status);
-        if(!status.connected) {
-          this.alertService.alert('Sem conexão', 'Não consigo acessar a internet. Por favor verifique!');
+        if (!status.connected) {
+          this.alertService.alert(
+            'Sem conexão',
+            'Não consigo acessar a internet. Por favor verifique!'
+          );
         } else {
-          this.alertService.alert('Conectado!!!', 'Ufa! Conexão restabelecida!');
+          this.alertService.alert(
+            'Conectado!!!',
+            'Ufa! Conexão restabelecida!'
+          );
         }
       });
     });
   }
 
   async logout(): Promise<void> {
-    const result = await this.alertService.confirm('Sair do App', 'Deseja sair do Lacarte?', this.desconecta);
-    if(result.role === 'Ok') {
+    const result = await this.alertService.confirm(
+      'Sair do App',
+      'Deseja sair do Lacarte?',
+      this.desconecta
+    );
+    if (result.role === 'Ok') {
       this.router.navigateByUrl('/tabs/profile');
     }
   }
 
   desconecta(res: any) {
-    if(res) {
-      localStorage.removeItem(CONSTANTS.keyStore.user);
-      localStorage.removeItem(CONSTANTS.keyStore.profile);
-      localStorage.removeItem(CONSTANTS.keyStore.token);
+    if (res) {
+      localStorage.clear();
     }
   }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.disconnectSubscription.unsubscribe();
   }
-
-
 }
